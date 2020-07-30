@@ -1,0 +1,207 @@
+##################################################################################################
+# Bosch Indego Mower package                                                                     #
+# Version 0.1 last updated 2020-07-23                                                            #
+# Created for and tested with Home Assistant Hassio version 0.113                                #
+# Creator Jens Mazzanti-Myretyr                                                                  #
+# Dependencies:                                                                                  #
+# https://github.com/jm-73/Indego                                                                #
+##################################################################################################
+
+# Automation section
+automation:
+  - id: '1221567890121'
+    alias: "Indego mow"
+    initial_state: true
+    trigger:
+      - platform: time
+        at: "14:15:00"
+    condition:
+      - condition: and
+        conditions:
+          - condition: time
+            weekday:
+              - mon
+              - wed
+              - thu
+              - fri
+      - condition: and
+        conditions:
+          - condition: state
+            entity_id: input_boolean.lawnstatus
+            state: "on"
+    action:
+      - service: indego.command
+        data:
+          command: mow
+
+  - id: '1221567890122'
+    alias: "Indego stop mow"
+    initial_state: true
+    trigger:
+      - platform: time
+        at: "18:00:00"
+    condition:
+      - condition: and
+        conditions:
+          - condition: time
+            weekday:
+              - mon
+              - wed
+              - thu
+              - fri
+      - condition: and
+        conditions:
+          - condition: state
+            entity_id: input_boolean.lawnstatus
+            state: "on"
+    action:
+      - service: indego.command
+        data:
+          command: returnToDock
+
+  - id: '1221567890123'
+    alias: "Indego stop mow session complete"
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.mow_session_completed
+        from: "off"
+        to: "on"
+    action:
+      - service: indego.command
+        data:
+          command: returnToDock
+      - service: homeassistant.turn_off
+        entity_id: input_boolean.mow_session_completed
+
+  - id: '1221567890124'
+    alias: "Indego check completed lower"
+    initial_state: true
+    trigger:
+      - platform: time_pattern
+        minutes: "/1"
+    condition:
+      - condition: numeric_state
+        entity_id:
+          - sensor.indego_505703041_lawm_mowed
+        below: "50"
+      - condition: state
+        entity_id: input_boolean.completed_upper
+        state: "on"
+    action:
+      - service: homeassistant.turn_on
+        entity_id: input_boolean.completed_lower
+      - service: homeassistant.turn_off
+        entity_id: input_boolean.completed_upper
+      - service: homeassistant.turn_on
+        entity_id: input_boolean.mow_session_completed
+
+  - id: '1221567890125'
+    alias: "Indego check completed upper"
+    initial_state: true
+    trigger:
+      - platform: time_pattern
+        minutes: "/1"
+    condition:
+      - condition: numeric_state
+        entity_id:
+          - sensor.indego_505703041_lawm_mowed
+        above: "50"
+    action:
+      - service: homeassistant.turn_on
+        entity_id: input_boolean.completed_upper
+
+#Lightning
+  - id: '1221567890140'
+    alias: "Indego lightning protection trigger"
+    initial_state: true
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.lightning_counter
+        above: 1
+    action:
+      - service: input_boolean.turn_on
+        entity_id:
+          - input_boolean.lightning_protect
+
+  - id: '1221567890141'
+    alias: "Indego lightning protection de-trigger"
+    initial_state: true
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.lightning_counter
+        below: 1
+    action:
+      - service: input_boolean.turn_off
+        entity_id:
+          - input_boolean.lightning_protect
+
+
+  - id: '1221567890130'
+    alias: "Indego lightning protection"
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.lightning_protect
+        from: "off"
+        to: "on"
+    action:
+      - service: indego.command
+        data:
+          command: mow
+      - delay:
+          minutes: 1
+      - service: indego.command
+        data:
+          command: pause
+
+  - id: '1221567890131'
+    alias: "Indego lightning protection"
+    initial_state: true
+    trigger:
+      - platform: state
+        entity_id: input_boolean.lightning_protect
+        from: "on"
+        to: "off"
+    action:
+      - service: indego.command
+        data:
+          command: returnToDock
+
+# Bolean section
+input_boolean:
+  lawn_icon:
+    name: Test grass icon
+    initial: on
+    icon: mdi:grass
+  lawnstatus:
+    name: Lawn cleared
+    initial: on
+    icon: mdi:traffic-light
+  completed_lower:
+    name: Lawn under 50%
+    initial: off
+    icon: mdi:arrow-collapse-down
+  completed_upper:
+    name: Lawn over 50%
+    initial: off
+    icon: mdi:arrow-collapse-up
+  mow_session_completed:
+    name: Mow session completed
+    initial: off
+    icon: mdi:check-outline
+  lightning_protect:
+    name: Lightning protect
+    initial: off
+    icon: mdi:weather-lightning
+  rain_protect:
+    name: Rain protect
+    initial: off
+    icon: mdi:weather-pouring
+
+sensor:
+  ### Place your lightning sensor here. Either local lightning sensor or cloud based services.
+  - platform: template
+    sensors:
+      lightning_counter:
+        value_template: "{{states.sensor.blitzortung_lightning_counter.state}}"
