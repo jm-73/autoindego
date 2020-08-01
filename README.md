@@ -2,11 +2,11 @@
 
 Home Assistant package for the Custom Component for Bosch Indego Lawn Mower. This package contains automations for:
 ## Mowing schedule 
-Set your app to manual and have the package automation mow your lawn 3 times a week.
+Set your official Bosch Indego app to manual and let package automation mow your lawn 3 times a week.
 ## Rain protection
-With a rain sensor (local or cloud based) prevent the mower from working in rain.
+With a rain sensor (local or cloud based) prevent the mower from mowing the lawn when it is raining.
 ## Lightning protection
-With a lightning sensor (local or cloud) the package sends the lawn in the lawn when thunder strikes are detected. Return to dock when thunder lightning are over.
+With a lightning sensor (local or cloud) the package sends the mower to stay in the lawn when thunder strikes are detected. Return to dock when thunder lightning are over. This is to prevent the mower from getting damaged when it is connected to the docking station and the guidance cable. When disaster strikes, the guidance wire will pick up some high voltage that potentially could ruin your mower.
 
 # Installation
 
@@ -17,11 +17,14 @@ Home Asisstant 0.113 or newer (may work on older Home Assistant, not tested).
 HACS Bosch Indego custom component.
 
 ### Optional for lightning detection
-HACS Blitzortung
+HACS Blitzortung<br>
 Local lightning sensor
 
 ### Optional for rain detection
-HACS ???
+OpenWeather<br>
+YR<br>
+DarkSky?<br>
+HACS ???<br>
 Local rain sensor
 
 ## Copy package file
@@ -73,9 +76,9 @@ The package creates:
 ## Customizalbe automations
 ### Indego mow
 Triggers three times a week. Adjust your schedule here!
+## Do not mess with these automations
 ### Indego stop mow
 Stops the mower after one completed mow.
-## Do not mess with these automations
 ### Indego stop mow session complete
 Watches the input_boolean.mow_session_complete and ends the session whenever the boolean mow_session_complete turns to on.
 ### Indego check completed upper

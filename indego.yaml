@@ -10,11 +10,11 @@
 # Automation section
 automation:
   - id: '1221567890121'
-    alias: "Indego mow"
+    alias: "Indego: mow"
     initial_state: true
     trigger:
       - platform: time
-        at: "14:15:00"
+        at: "10:15:00"
     condition:
       - condition: and
         conditions:
@@ -27,7 +27,7 @@ automation:
       - condition: and
         conditions:
           - condition: state
-            entity_id: input_boolean.lawnstatus
+            entity_id: input_boolean.autoindego_lawnstatus
             state: "on"
     action:
       - service: indego.command
@@ -35,7 +35,7 @@ automation:
           command: mow
 
   - id: '1221567890122'
-    alias: "Indego stop mow"
+    alias: "Indego: stop mow on time"
     initial_state: true
     trigger:
       - platform: time
@@ -52,7 +52,7 @@ automation:
       - condition: and
         conditions:
           - condition: state
-            entity_id: input_boolean.lawnstatus
+            entity_id: input_boolean.autoindego_lawnstatus
             state: "on"
     action:
       - service: indego.command
@@ -60,11 +60,11 @@ automation:
           command: returnToDock
 
   - id: '1221567890123'
-    alias: "Indego stop mow session complete"
+    alias: "Indego: stop mow when 100% done"
     initial_state: true
     trigger:
       - platform: state
-        entity_id: input_boolean.mow_session_completed
+        entity_id: input_boolean.autoindego_mow_session_completed
         from: "off"
         to: "on"
     action:
@@ -72,10 +72,10 @@ automation:
         data:
           command: returnToDock
       - service: homeassistant.turn_off
-        entity_id: input_boolean.mow_session_completed
+        entity_id: input_boolean.autoindego_mow_session_completed
 
   - id: '1221567890124'
-    alias: "Indego check completed lower"
+    alias: "Indego_system: check when completed flips over 100%"
     initial_state: true
     trigger:
       - platform: time_pattern
@@ -86,18 +86,16 @@ automation:
           - sensor.indego_505703041_lawm_mowed
         below: "50"
       - condition: state
-        entity_id: input_boolean.completed_upper
+        entity_id: input_boolean.autoindego_completed_upper
         state: "on"
     action:
-      - service: homeassistant.turn_on
-        entity_id: input_boolean.completed_lower
       - service: homeassistant.turn_off
-        entity_id: input_boolean.completed_upper
+        entity_id: input_boolean.autoindego_completed_upper
       - service: homeassistant.turn_on
-        entity_id: input_boolean.mow_session_completed
+        entity_id: input_boolean.autoindego_mow_session_completed
 
   - id: '1221567890125'
-    alias: "Indego check completed upper"
+    alias: "Indego_system: check completed upper"
     initial_state: true
     trigger:
       - platform: time_pattern
@@ -109,11 +107,11 @@ automation:
         above: "50"
     action:
       - service: homeassistant.turn_on
-        entity_id: input_boolean.completed_upper
+        entity_id: input_boolean.autoindego_completed_upper
 
 #Lightning
   - id: '1221567890140'
-    alias: "Indego lightning protection trigger"
+    alias: "Indego_system: lightning protection trigger"
     initial_state: true
     trigger:
       - platform: numeric_state
@@ -122,10 +120,10 @@ automation:
     action:
       - service: input_boolean.turn_on
         entity_id:
-          - input_boolean.lightning_protect
+          - input_boolean.autoindego_lightning_protect
 
   - id: '1221567890141'
-    alias: "Indego lightning protection de-trigger"
+    alias: "Indego_system: lightning protection de-trigger"
     initial_state: true
     trigger:
       - platform: numeric_state
@@ -134,11 +132,11 @@ automation:
     action:
       - service: input_boolean.turn_off
         entity_id:
-          - input_boolean.lightning_protect
+          - input_boolean.autoindego_lightning_protect
 
 
   - id: '1221567890130'
-    alias: "Indego lightning protection"
+    alias: "Indego_system: lightning protection"
     initial_state: true
     trigger:
       - platform: state
@@ -156,11 +154,11 @@ automation:
           command: pause
 
   - id: '1221567890131'
-    alias: "Indego lightning protection"
+    alias: "Indego_system: lightning protection stop"
     initial_state: true
     trigger:
       - platform: state
-        entity_id: input_boolean.lightning_protect
+        entity_id: input_boolean.autoindego_lightning_protect
         from: "on"
         to: "off"
     action:
@@ -170,38 +168,47 @@ automation:
 
 # Bolean section
 input_boolean:
-  lawn_icon:
+  autoindego_lawn_icon:
     name: Test grass icon
     initial: on
     icon: mdi:grass
-  lawnstatus:
+  autoindego_lawnstatus:
     name: Lawn cleared
     initial: on
     icon: mdi:traffic-light
-  completed_lower:
-    name: Lawn under 50%
-    initial: off
-    icon: mdi:arrow-collapse-down
-  completed_upper:
+  autoindego_completed_upper:
     name: Lawn over 50%
     initial: off
     icon: mdi:arrow-collapse-up
-  mow_session_completed:
+  autoindego_mow_session_completed:
     name: Mow session completed
     initial: off
     icon: mdi:check-outline
-  lightning_protect:
+  autoindego_lightning_protect:
     name: Lightning protect
     initial: off
     icon: mdi:weather-lightning
-  rain_protect:
+  autoindego_rain_protect:
     name: Rain protect
     initial: off
     icon: mdi:weather-pouring
 
 sensor:
-  ### Place your lightning sensor here. Either local lightning sensor or cloud based services.
+  ### Place your lightning sensor here. Either local sensor or cloud based services.
   - platform: template
     sensors:
-      lightning_counter:
+      autoindego_lightning_counter:
         value_template: "{{states.sensor.blitzortung_lightning_counter.state}}"
+
+  ### Place your rain sensor here. Either local sensor or cloud based services.
+  - platform: template
+    sensors:
+      autoindego_rain_counter:
+        #value_template: "{{states.sensor.rain_counter.state}}"
+        value_template: "{{states.weathertest_precipitation.state}}"
+        #sensor.weathertest_precipitation
+
+#  - platform: openweathermap
+#    api_key: 6657306f1b4a0779a3fbf787c69c4007
+#    monitored_conditions:
+#      - rain
